@@ -1,0 +1,10 @@
+remote_theme: "mmistakes/minimal-mistakes@latest"
+
+plugins:
+  - jekyll-remote-theme
+  - jekyll-include-cache
+
+title: "Wenbin Team"
+description: "Wenbin Team official site"
+url: "https://wangfeihhh.github.io"
+baseurl: "/WenbinTeam"
