@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>螺旋桩贯入分析 - 改进版</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            font-size: 2.4rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .panel {
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+        
+        .panel h2 {
+            color: #1a2980;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .input-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .input-group {
+            margin-bottom: 18px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #26d0ce;
+            box-shadow: 0 0 0 2px rgba(38, 208, 206, 0.2);
+        }
+        
+        .blade-params {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid #1a2980;
+        }
+        
+        .blade-params h3 {
+            color: #1a2980;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .blade-item {
+            background-color: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .blade-item h4 {
+            color: #444;
+            margin-bottom: 10px;
+        }
+        
+        .layer-params {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid #27ae60;
+        }
+        
+        .layer-params h3 {
+            color: #27ae60;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .layer-item {
+            background-color: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .layer-item h4 {
+            color: #444;
+            margin-bottom: 10px;
+        }
+        
+        .model-selection {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        .model-selection h3 {
+            color: #1a2980;
+            margin-bottom: 15px;
+        }
+        
+        .model-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .model-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, #1a2980, #26d0ce);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(26, 41, 128, 0.2);
+        }
+        
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: #555;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-top: 15px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+        
+        .model-results {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 25px;
+        }
+        
+        .model-card {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border-top: 4px solid;
+        }
+        
+        .model-card.ghaly {
+            border-color: #1a2980;
+        }
+        
+        .model-card.al-baghdadi {
+            border-color: #e74c3c;
+        }
+        
+        .model-card.shao {
+            border-color: #27ae60;
+        }
+        
+        .model-card h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .value-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 1100px) {
+            .input-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .model-results {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .model-options {
+                flex-direction: column;
+            }
+            
+            .navigation {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 页面1：输入参数 -->
+    <div id="inputPage" class="page active">
+        <header>
+            <h1>螺旋桩贯入分析</h1>
+            <p class="subtitle">输入参数 - 三种理论模型对比</p>
+        </header>
+        
+        <div class="container">
+            <div class="panel">
+                <h2>基本参数</h2>
+                
+                <div class="input-section">
+                    <div>
+                        <div class="input-group">
+                            <label for="Ds">桩杆直径 (m)</label>
+                            <input type="number" id="Ds" step="0.01" value="0.5" min="0.1">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="n">叶片数量</label>
+                            <input type="number" id="n" value="2" min="1" max="5">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="H_total">总设计埋深 (m)</label>
+                            <input type="number" id="H_total" step="0.1" value="10" min="1" max="50">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="th">叶片厚度 (m)</label>
+                            <input type="number" id="th" step="0.001" value="0.01" min="0.001">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="input-group">
+                            <label for="n_rpm">转速 (RPM)</label>
+                            <input type="number" id="n_rpm" step="0.01" value="3.33" min="0.1">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="step_size">深度步长 (m)</label>
+                            <input type="number" id="step_size" step="0.01" value="0.05" min="0.01">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="Hh_bot">最底部叶片距离桩底的距离 (m)</label>
+                            <input type="number" id="Hh_bot" step="0.1" value="0" min="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2>叶片参数</h2>
+                <div class="blade-params">
+                    <h3>叶片参数（从上到下排列）</h3>
+                    <div id="blade-inputs">
+                        <!-- Blade inputs will be generated dynamically -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2>地层参数</h2>
+                <div class="layer-params">
+                    <h3>地层参数（从地表向下排列）</h3>
+                    <div id="layer-inputs">
+                        <!-- Layer inputs will be generated dynamically -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2>模型选择</h2>
+                <div class="model-selection">
+                    <h3>选择要使用的计算模型</h3>
+                    <div class="model-options">
+                        <div class="model-option">
+                            <input type="checkbox" id="model-ghaly" checked>
+                            <label for="model-ghaly">Ghaly & Hanna 模型</label>
+                        </div>
+                        <div class="model-option">
+                            <input type="checkbox" id="model-al" checked>
+                            <label for="model-al">Al-Baghdadi 模型</label>
+                        </div>
+                        <div class="model-option">
+                            <input type="checkbox" id="model-shao" checked>
+                            <label for="model-shao">Shao-Liu 模型</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="btn-container">
+                <button id="nextBtn" class="btn-primary">下一步：计算结果</button>
+                <button id="resetBtn" class="btn-secondary">重置参数</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 页面2：计算结果 -->
+    <div id="resultPage" class="page">
+        <header>
+            <h1>螺旋桩贯入分析</h1>
+            <p class="subtitle">计算结果 - 三种理论模型对比</p>
+        </header>
+        
+        <div class="container">
+            <div class="panel">
+                <h2>分析结果</h2>
+                
+                <div class="charts-container">
+                    <div class="chart-container">
+                        <canvas id="torqueChart"></canvas>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="forceChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #1a2980;"></div>
+                        <span>Ghaly & Hanna 模型</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #e74c3c;"></div>
+                        <span>Al-Baghdadi 模型</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #27ae60;"></div>
+                        <span>Shao-Liu 模型</span>
+                    </div>
+                </div>
+                
+                <div id="model-results-container" class="model-results">
+                    <!-- Model results will be generated dynamically -->
+                </div>
+            </div>
+            
+            <div class="navigation">
+                <button id="backBtn" class="btn-secondary">返回修改参数</button>
+                <button id="exportBtn" class="btn-primary">导出结果</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let torqueChart = null;
+        let forceChart = null;
+        let calculationData = null;
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeInputs();
+            setupEventListeners();
+        });
+        
+        // 初始化输入字段
+        function initializeInputs() {
+            // 初始化叶片参数
+            const n = parseInt(document.getElementById('n').value);
+            updateBladeInputs(n);
+            
+            // 初始化地层参数
+            updateLayerInputs();
+        }
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            document.getElementById('nextBtn').addEventListener('click', goToResults);
+            document.getElementById('backBtn').addEventListener('click', goToInput);
+            document.getElementById('resetBtn').addEventListener('click', resetToDefaults);
+            document.getElementById('exportBtn').addEventListener('click', exportResults);
+            document.getElementById('n').addEventListener('change', function() {
+                const n = parseInt(this.value);
+                updateBladeInputs(n);
+            });
+        }
+        
+        // 更新叶片输入字段
+        function updateBladeInputs(n) {
+            const container = document.getElementById('blade-inputs');
+            container.innerHTML = '';
+            
+            // 默认值
+            const defaultDh = [1.5, 1];
+            const defaultSh = [3.0, 3.0];
+            const defaultPh = [0.3, 0.3];
+            
+            for (let i = 0; i < n; i++) {
+                const bladeDiv = document.createElement('div');
+                bladeDiv.className = 'blade-item';
+                bladeDiv.innerHTML = `
+                    <h4>叶片 ${i+1}</h4>
+                    <div class="input-group">
+                        <label for="Dh${i}">叶片直径 (m)</label>
+                        <input type="number" id="Dh${i}" step="0.01" value="${defaultDh[i] || 1.0}" min="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="Sh${i}">叶片间距 (m)</label>
+                        <input type="number" id="Sh${i}" step="0.01" value="${defaultSh[i] || 2.0}" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label for="Ph${i}">叶片螺距 (m)</label>
+                        <input type="number" id="Ph${i}" step="0.01" value="${defaultPh[i] || 0.3}" min="0">
+                    </div>
+                `;
+                container.appendChild(bladeDiv);
+            }
+        }
+        
+        // 更新地层输入字段
+        function updateLayerInputs() {
+            const container = document.getElementById('layer-inputs');
+            container.innerHTML = '';
+            
+            // 默认地层数据
+            const defaultLayers = [
+                { depth: 0, gamma: 16.99, Dr: 0.5, phi_p: 48, phi_cv: 32 },
+                { depth: 20, gamma: 16.99, Dr: 0.5, phi_p: 48, phi_cv: 32 }
+            ];
+            
+            for (let i = 0; i < defaultLayers.length; i++) {
+                const layer = defaultLayers[i];
+                const layerDiv = document.createElement('div');
+                layerDiv.className = 'layer-item';
+                layerDiv.innerHTML = `
+                    <h4>地层 ${i+1}</h4>
+                    <div class="input-group">
+                        <label for="depth${i}">深度下限 (m)</label>
+                        <input type="number" id="depth${i}" step="0.1" value="${layer.depth}" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label for="gamma${i}">重度 (kN/m³)</label>
+                        <input type="number" id="gamma${i}" step="0.01" value="${layer.gamma}" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label for="Dr${i}">密实度 (0-1)</label>
+                        <input type="number" id="Dr${i}" step="0.01" value="${layer.Dr}" min="0" max="1">
+                    </div>
+                    <div class="input-group">
+                        <label for="phi_p${i}">峰值摩擦角 (°)</label>
+                        <input type="number" id="phi_p${i}" step="0.1" value="${layer.phi_p}" min="0" max="90">
+                    </div>
+                    <div class="input-group">
+                        <label for="phi_cv${i}">临界摩擦角 (°)</label>
+                        <input type="number" id="phi_cv${i}" step="0.1" value="${layer.phi_cv}" min="0" max="90">
+                    </div>
+                `;
+                container.appendChild(layerDiv);
+            }
+        }
+        
+        // 重置参数为默认值
+        function resetToDefaults() {
+            document.getElementById('Ds').value = 0.5;
+            document.getElementById('n').value = 2;
+            document.getElementById('H_total').value = 10;
+            document.getElementById('th').value = 0.01;
+            document.getElementById('n_rpm').value = 3.33;
+            document.getElementById('step_size').value = 0.05;
+            document.getElementById('Hh_bot').value = 0;
+            
+            // 重置模型选择
+            document.getElementById('model-ghaly').checked = true;
+            document.getElementById('model-al').checked = true;
+            document.getElementById('model-shao').checked = true;
+            
+            initializeInputs();
+        }
+        
+        // 转到结果页面
+        function goToResults() {
+            // 收集输入数据
+            calculationData = collectInputData();
+            
+            // 切换到结果页面
+            document.getElementById('inputPage').classList.remove('active');
+            document.getElementById('resultPage').classList.add('active');
+            
+            // 进行计算和显示结果
+            calculateAndDisplayResults();
+        }
+        
+        // 转到输入页面
+        function goToInput() {
+            document.getElementById('resultPage').classList.remove('active');
+            document.getElementById('inputPage').classList.add('active');
+        }
+        
+        // 收集输入数据
+        function collectInputData() {
+            const data = {
+                // 基本参数
+                Ds: parseFloat(document.getElementById('Ds').value),
+                n: parseInt(document.getElementById('n').value),
+                H_total: parseFloat(document.getElementById('H_total').value),
+                th: parseFloat(document.getElementById('th').value),
+                n_rpm: parseFloat(document.getElementById('n_rpm').value),
+                step_size: parseFloat(document.getElementById('step_size').value),
+                Hh_bot: parseFloat(document.getElementById('Hh_bot').value),
+                
+                // 模型选择
+                useGhaly: document.getElementById('model-ghaly').checked,
+                useAl: document.getElementById('model-al').checked,
+                useShao: document.getElementById('model-shao').checked,
+                
+                // 叶片参数
+                Dh_array: [],
+                Sh_array: [],
+                Ph_array: [],
+                
+                // 地层参数
+                layerData: []
+            };
+            
+            // 获取叶片参数
+            for (let i = 0; i < data.n; i++) {
+                data.Dh_array.push(parseFloat(document.getElementById(`Dh${i}`).value));
+                data.Sh_array.push(parseFloat(document.getElementById(`Sh${i}`).value));
+                data.Ph_array.push(parseFloat(document.getElementById(`Ph${i}`).value));
+            }
+            
+            // 获取地层参数
+            const layerElements = document.querySelectorAll('.layer-item');
+            layerElements.forEach((element, index) => {
+                const depth = parseFloat(document.getElementById(`depth${index}`).value);
+                const gamma = parseFloat(document.getElementById(`gamma${index}`).value);
+                const Dr = parseFloat(document.getElementById(`Dr${index}`).value);
+                const phi_p = parseFloat(document.getElementById(`phi_p${index}`).value);
+                const phi_cv = parseFloat(document.getElementById(`phi_cv${index}`).value);
+                data.layerData.push([depth, gamma, Dr, phi_p, phi_cv]);
+            });
+            
+            return data;
+        }
+        
+        // 度转弧度函数
+        function deg2rad(deg) {
+            return deg * Math.PI / 180;
+        }
+        
+        // 获取土层参数
+        function getSoilParamsAtDepth(layerData, H_total, step_size) {
+            const num_steps = Math.ceil(H_total / step_size) + 1;
+            const depths = Array.from({length: num_steps}, (_, i) => i * step_size);
+            
+            const gamma_array = new Array(num_steps).fill(0);
+            const Dr_array = new Array(num_steps).fill(0);
+            const phi_p_deg_array = new Array(num_steps).fill(0);
+            const phi_cv_deg_array = new Array(num_steps).fill(0);
+            
+            for (let i = 0; i < num_steps; i++) {
+                const depth = depths[i];
+                
+                for (let layer_idx = 0; layer_idx < layerData.length - 1; layer_idx++) {
+                    if (depth >= layerData[layer_idx][0] && depth < layerData[layer_idx + 1][0]) {
+                        gamma_array[i] = layerData[layer_idx][1];
+                        Dr_array[i] = layerData[layer_idx][2];
+                        phi_p_deg_array[i] = layerData[layer_idx][3];
+                        phi_cv_deg_array[i] = layerData[layer_idx][4];
+                        break;
+                    }
+                }
+            }
+            
+            return { gamma_array, Dr_array, phi_p_deg_array, phi_cv_deg_array, depths };
+        }
+        
+        // Ghaly模型
+        function GhalyModel(Dh_array, Ds, n, H_total, gamma_array, phi_deg_array, th, step_size, 
+                           Sh_array, Hh_bot, Ph_array, layerData) {
+            const num_steps = Math.ceil(H_total / step_size) + 1;
+            const depths = Array.from({length: num_steps}, (_, i) => i * step_size);
+            const T_evolution = new Array(num_steps).fill(0);
+            const Fv_evolution = new Array(num_steps).fill(0);
+            
+            // 定义叶片在桩上的位置（从桩底开始计算）
+            const blade_positions = new Array(n).fill(0);
+            blade_positions[0] = Hh_bot;
+            for (let i = 1; i < n; i++) {
+                blade_positions[i] = blade_positions[i-1] + Sh_array[i-1];
+            }
+            
+            // 模拟钻入过程
+            for (let step = 0; step < num_steps; step++) {
+                const current_depth = depths[step];
+                
+                if (current_depth === 0) {
+                    T_evolution[step] = 0;
+                    Fv_evolution[step] = 0;
+                    continue;
+                }
+                
+                // 获取当前深度处的土层参数
+                const current_gamma = gamma_array[step];
+                const current_phi_deg = phi_deg_array[step];
+                const current_phi = deg2rad(current_phi_deg);
+                const current_delta = 3 * current_phi / 4;
+                
+                // 土压力系数
+                const Kp = (1 + Math.sin(current_phi)) / (1 - Math.sin(current_phi));
+                const Kp_prime = 0.3 * Kp;
+                const Ka = (1 - Math.sin(current_phi)) / (1 + Math.sin(current_phi));
+                
+                // 计算每个叶片的当前埋深
+                const Hh = new Array(n).fill(0);
+                for (let i = 0; i < n; i++) {
+                    const blade_depth = current_depth - blade_positions[i];
+                    Hh[i] = Math.max(blade_depth, 0);
+                }
+                
+                // 计算当前深度下的扭矩
+                let T1 = 0.5 * current_gamma * Math.pow(current_depth, 2) * Math.cos(current_delta) *
+                        Kp_prime * Math.tan(current_delta) * (Math.PI * Ds) * (Ds/2);
+                
+                let T_sum = 0;
+                
+                for (let i = 0; i < n; i++) {
+                    if (Hh[i] <= 0) continue;
+                    
+                    const Dh = Dh_array[i];
+                    const Ph = Ph_array[i];
+                    const alpha = Math.atan(Ph / (Math.PI * Dh));
+                    const Ah = (Math.PI * Math.pow(Dh/2, 2)) - (Math.PI * Math.pow(Ds/2, 2));
+                    
+                    const T2_i = 0.5 * current_gamma * Math.pow(Hh[i], 2) * Math.sin(current_delta) *
+                                Kp_prime * Math.tan(current_delta + alpha) * (Math.PI * Ds) * (Ds/2);
+                    
+                    const T3_i = 0.5 * current_gamma * Math.pow(Hh[i], 2) * Math.sin(current_phi) *
+                                Kp_prime * Math.tan(current_delta + alpha) * (Math.PI * Dh) * (Dh/2);
+                    
+                    const T4_i = current_gamma * Hh[i] * Ka * Ah * Math.tan(current_delta + alpha) * ((Ds + Dh)/4);
+                    
+                    const T5_i = current_gamma * Hh[i] * Kp * Ah * Math.tan(current_delta + alpha) * ((Ds + Dh)/4);
+                    
+                    const T6_i = 0.5 * current_gamma * Hh[i] * Kp * Ph * (1 + Ph) * (Math.pow(Dh - Ds, 2) / 8);
+                    
+                    const T7_i = current_gamma * Hh[i] * Kp * Math.tan(current_delta) *
+                                (Math.PI * Dh) * (Dh/2) * th;
+                    
+                    T_sum += T2_i + T3_i + T4_i + T5_i + T6_i + T7_i;
+                }
+                
+                T_evolution[step] = T1 + T_sum;
+                
+                // 计算当前深度下的垂直力
+                let Fv1 = 0.5 * current_gamma * Math.pow(current_depth, 2) * Math.sin(current_delta) *
+                         Kp_prime * (Math.PI * Ds);
+                
+                let Fv_sum = 0;
+                
+                for (let i = 0; i < n; i++) {
+                    if (Hh[i] <= 0) continue;
+                    
+                    const Dh = Dh_array[i];
+                    const Ph = Ph_array[i];
+                    const alpha = Math.atan(Ph / (Math.PI * Dh));
+                    const Ah = (Math.PI * Math.pow(Dh/2, 2)) - (Math.PI * Math.pow(Ds/2, 2));
+                    
+                    const Fv2_i = 0.5 * current_gamma * Math.pow(Hh[i], 2) * Math.sin(current_phi) *
+                                 Kp_prime * (Math.PI * Dh);
+                    
+                    const Fv3_i = current_gamma * Hh[i] * Kp * Ah * Math.cos(alpha);
+                    
+                    const Fv4_i = current_gamma * Hh[i] * Ka * Ah * Math.cos(alpha);
+                    
+                    Fv_sum += Fv2_i + Fv3_i + Fv4_i;
+                }
+                
+                Fv_evolution[step] = Fv1 + Fv_sum;
+            }
+            
+            return { T_evolution, Fv_evolution, depths };
+        }
+        
+        // Al-Baghdadi模型
+        function AlBaghdadiModel(Dh_array, Ds, n, H_total, gamma_array, phi_deg_array, th, Dr_array,
+                                step_size, Sh_array, Hh_bot, layerData) {
+            const num_steps = Math.ceil(H_total / step_size) + 1;
+            const depths = Array.from({length: num_steps}, (_, i) => i * step_size);
+            const T_evolution = new Array(num_steps).fill(0);
+            const Fv_evolution = new Array(num_steps).fill(0);
+            
+            // 定义叶片位置
+            const blade_positions = new Array(n).fill(0);
+            blade_positions[0] = Hh_bot;
+            for (let i = 1; i < n; i++) {
+                blade_positions[i] = blade_positions[i-1] + Sh_array[i-1];
+            }
+            
+            // 模拟钻入过程
+            for (let step = 0; step < num_steps; step++) {
+                const current_depth = depths[step];
+                
+                if (current_depth === 0) {
+                    T_evolution[step] = 0;
+                    Fv_evolution[step] = 0;
+                    continue;
+                }
+                
+                // 获取当前深度处的土层参数
+                const current_gamma = gamma_array[step];
+                const current_phi_deg = phi_deg_array[step];
+                const current_Dr = Dr_array[step];
+                
+                const current_phi = deg2rad(current_phi_deg);
+                const current_delta = 3 * current_phi / 4;
+                
+                // 侧向土压力系数
+                const K = 1.5 * (1 - Math.sin(current_phi));
+                
+                // 承载能力因子
+                const Nq = Math.exp(Math.PI * Math.tan(current_phi)) * Math.pow(Math.tan(Math.PI/4 + current_phi/2), 2);
+                
+                // 修正的被动土压力系数
+                const Kp = (1 + Math.sin(current_phi)) / (1 - Math.sin(current_phi));
+                const Kp_prime = 0.3 * Kp;
+                
+                // 螺旋桩扰动的土壤强度衰减系数
+                const f = 0.15 * Math.exp(1.4 * current_Dr);
+                
+                // 计算每个叶片的当前埋深
+                const Hh = new Array(n).fill(0);
+                for (let i = 0; i < n; i++) {
+                    const blade_depth = current_depth - blade_positions[i];
+                    Hh[i] = Math.max(blade_depth, 0);
+                }
+                
+                // 计算当前深度下的扭矩分量
+                const Ts = current_gamma * Math.pow(current_depth, 2) * K * Math.tan(current_delta) *
+                          (Math.PI * Math.pow(Ds, 2)) / 4;
+                
+                const Tb = current_gamma * current_depth * Nq * Math.tan(current_delta) *
+                          (Math.PI * Math.pow(Ds, 3)) / 12;
+                
+                let T_blades = 0;
+                
+                for (let i = 0; i < n; i++) {
+                    if (Hh[i] <= 0) continue;
+                    
+                    const Dh = Dh_array[i];
+                    
+                    const Th1_i = current_gamma * Hh[i] * Kp_prime * Math.tan(current_delta) *
+                                 Math.PI * (Math.pow(Dh, 3) - Math.pow(Ds, 3)) / 12;
+                    
+                    const Th2_i = current_gamma * Hh[i] * Kp_prime * Math.tan(current_delta) *
+                                 th * (Math.PI * Math.pow(Dh, 2)) / 2;
+                    
+                    const Th3_i = current_gamma * Hh[i] * Nq * th * (Math.pow(Dh, 2) - Math.pow(Ds, 2)) / 8;
+                    
+                    T_blades += Th1_i + Th2_i + Th3_i;
+                }
+                
+                T_evolution[step] = Ts + Tb + T_blades;
+                
+                // 计算当前深度下的垂直力分量
+                const Fs = current_gamma * Math.pow(current_depth, 2) * K * Math.tan(current_delta) *
+                          (Math.PI * Ds) / 2 * f;
+                
+                const Fb = current_gamma * current_depth * Nq * (Math.PI * Math.pow(Ds, 2)) / 4 * f;
+                
+                let Fv_blades = 0;
+                
+                for (let i = 0; i < n; i++) {
+                    if (Hh[i] <= 0) continue;
+                    
+                    const Dh = Dh_array[i];
+                    
+                    const Fh1_i = current_gamma * Hh[i] * Kp_prime * Math.tan(current_delta) *
+                                 Math.PI * (Math.pow(Dh, 2) - Math.pow(Ds, 2)) / 4;
+                    
+                    const Fh2_i = current_gamma * Hh[i] * Kp_prime * th * Math.tan(current_delta) *
+                                 (Math.PI * Dh);
+                    
+                    const Fh3_i = current_gamma * Hh[i] * Nq * th * (Dh - Ds) / 2;
+                    
+                    Fv_blades += Fh1_i + Fh2_i + Fh3_i;
+                }
+                
+                Fv_evolution[step] = Fs + Fb + Fv_blades;
+            }
+            
+            return { T_evolution, Fv_evolution, depths };
+        }
+        
+        // Shao-Liu模型
+        function ShaoLiuModel(Dh_array, Ds, n, H_total, gamma_array, phi_p_deg_array, phi_cv_deg_array,
+                             th, n_rpm, step_size, Sh_array, Hh_bot, Ph_array, layerData) {
+            const num_steps = Math.ceil(H_total / step_size) + 1;
+            
+            // 初始化输出数组
+            const depth_evolution = {
+                depths: Array.from({length: num_steps}, (_, i) => i * step_size),
+                T_total: new Array(num_steps).fill(0),
+                Fv_total: new Array(num_steps).fill(0),
+                P_total: new Array(num_steps).fill(0)
+            };
+            
+            // 定义叶片位置
+            const blade_positions = new Array(n).fill(0);
+            blade_positions[0] = Hh_bot;
+            for (let i = 1; i < n; i++) {
+                blade_positions[i] = blade_positions[i-1] + Sh_array[i-1];
+            }
+            
+            // 旋转速度转换 (RPM 转 rad/s)
+            const n_rad_per_s = n_rpm * 2 * Math.PI / 60;
+            
+            // 模拟钻入过程
+            for (let step = 0; step < num_steps; step++) {
+                const current_depth = depth_evolution.depths[step];
+                
+                if (current_depth === 0) {
+                    depth_evolution.T_total[step] = 0;
+                    depth_evolution.Fv_total[step] = 0;
+                    depth_evolution.P_total[step] = 0;
+                    continue;
+                }
+                
+                // 获取当前深度处的土层参数
+                const current_gamma = gamma_array[step];
+                const current_phi_p_deg = phi_p_deg_array[step];
+                const current_phi_cv_deg = phi_cv_deg_array[step];
+                
+                const current_phi_p = deg2rad(current_phi_p_deg);
+                const current_phi_cv = deg2rad(current_phi_cv_deg);
+                
+                // 桩-土界面摩擦角
+                const delta_p = 0.67 * current_phi_p;
+                const delta_cv = 0.67 * current_phi_cv;
+                
+                // 计算每个叶片的当前埋深
+                const Hh = new Array(n).fill(0);
+                for (let i = 0; i < n; i++) {
+                    const blade_depth = current_depth - blade_positions[i];
+                    Hh[i] = Math.max(blade_depth, 0);
+                }
+                
+                // 计算当前深度下的垂直力分量
+                // 侧向土压力系数Kr
+                const Kr = 0.025 * Math.exp(0.084 * current_phi_p_deg);
+                
+                // 被动土压力系数
+                const Kp = (1 + Math.sin(current_phi_p)) / (1 - Math.sin(current_phi_p));
+                const Kp_cv = (1 + Math.sin(current_phi_cv)) / (1 - Math.sin(current_phi_cv));
+                
+                // 修正的被动土压力系数
+                const Kp_prime = 0.3 * Kp;
+                const Kp_cv_prime = 0.3 * Kp_cv;
+                
+                // 承载力因子
+                const Nq = Math.exp(Math.PI * Math.tan(current_phi_p)) * Math.pow(Math.tan(Math.PI/4 + current_phi_p/2), 2);
+                
+                // 桩尖旋转折减系数
+                const f2 = 0.54;
+                const Nqr = f2 * Nq;
+                
+                // 垂直贯入速度 (m/s)
+                // 使用最底部叶片的螺距
+                const v = n_rad_per_s / (2 * Math.PI) * Ph_array[0];
+                
+                // 速度比 (VR)
+                const VR = (2 * Math.PI * Ds) / Ph_array[0];
+                
+                // 上部叶片扭矩折减系数
+                const beta = 0.44;
+                
+                // 桩轴侧面的垂直力Fs
+                const Fs = current_gamma * Math.pow(current_depth, 2) * Kr * Math.tan(delta_p) *
+                          (Math.PI * Ds) / 2 * (1 / Math.sqrt(1 + Math.pow(VR, 2)));
+                
+                // 桩底的垂直力Fb
+                const Fb = current_gamma * current_depth * Nqr * (Math.PI * Math.pow(Ds, 2)) / 4;
+                
+                // 计算每个叶片的垂直力Fh_i
+                const Fh_i = new Array(n).fill(0);
+                for (let i = 0; i < n; i++) {
+                    if (Hh[i] <= 0) continue;
+                    
+                    const Dh = Dh_array[i];
+                    const Ph = Ph_array[i];
+                    const Dm = (Ds + Dh) / 2;
+                    const alpha = Math.atan(Ph / (Math.PI * Dm));
+                    const Ah = Math.PI * (Math.pow(Dh, 2) - Math.pow(Ds, 2)) / 4;
+                    
+                    // 根据叶片位置选择土压力系数
+                    let Kp_used;
+                    if (i === 0) {
+                        // 最下面的叶片使用峰值摩擦角
+                        Kp_used = Kp_prime;
+                    } else {
+                        // 上部叶片使用临界状态摩擦角
+                        Kp_used = Kp_cv_prime;
+                    }
+                    
+                    // 叶片垂直力Fh_i
+                    Fh_i[i] = current_gamma * Hh[i] * Kp_used * Math.cos(alpha) * Ah;
+                }
+                
+                // 总垂直力
+                const Fv = Fs + Fb + Fh_i.reduce((sum, val) => sum + val, 0);
+                
+                // 存储垂直力
+                depth_evolution.Fv_total[step] = Fv;
+                
+                // 计算当前深度下的扭矩分量
+                // 桩轴侧面的扭矩Ts
+                const Ts = current_gamma * Math.pow(current_depth, 2) * Kr * Math.tan(delta_p) *
+                          (Math.PI * Math.pow(Ds, 2)) / 4 * (VR / Math.sqrt(1 + Math.pow(VR, 2)));
+                
+                // 桩底的扭矩Tb
+                const Tb = current_gamma * current_depth * Nqr * Math.tan(delta_p) *
+                          (Math.PI * Math.pow(Ds, 3)) / 12;
+                
+                // 计算每个叶片的扭矩Th_i
+                // 先计算叶片上方的土体重量W_hi
+                const W_hi = new Array(n).fill(0);
+                for (let i = 0; i < n; i++) {
+                    if (Hh[i] <= 0) continue;
+                    const Dh = Dh_array[i];
+                    const Ah = Math.PI * (Math.pow(Dh, 2) - Math.pow(Ds, 2)) / 4;
+                    W_hi[i] = current_gamma * Hh[i] * Ah;
+                }
+                
+                // 从最上面的叶片开始计算
+                const Th_i = new Array(n).fill(0);
+                for (let i = n - 1; i >= 0; i--) {
+                    if (Hh[i] <= 0) continue;
+                    
+                    // 计算作用在第i个叶片上的垂直力F'_vi
+                    let F_prime_vi;
+                    if (i === n - 1) {
+                        // 最上面的叶片
+                        F_prime_vi = Fv - current_gamma * Math.pow(current_depth - blade_positions[i], 2) *
+                                    Kr * Math.tan(delta_p) * (Math.PI * Ds) / 2 * (1 / Math.sqrt(1 + Math.pow(VR, 2)));
+                    } else {
+                        // 下面的叶片需要减去上面所有叶片的垂直力
+                        const sum_above = Fh_i.slice(i + 1).reduce((sum, val) => sum + val, 0);
+                        F_prime_vi = Fv - current_gamma * Math.pow(current_depth - blade_positions[i], 2) *
+                                    Kr * Math.tan(delta_p) * (Math.PI * Ds) / 2 * (1 / Math.sqrt(1 + Math.pow(VR, 2))) - sum_above;
+                    }
+                    
+                    // 选择界面摩擦角
+                    const delta_used = (i === 0) ? delta_p : delta_cv;
+                    
+                    // 计算叶片扭矩
+                    const Dh = Dh_array[i];
+                    const Ph = Ph_array[i];
+                    const Dm = (Ds + Dh) / 2;
+                    const alpha = Math.atan(Ph / (Math.PI * Dm));
+                    
+                    if (i === 0) {
+                        // 最下面的叶片不乘折减系数
+                        Th_i[i] = (F_prime_vi + W_hi[i]) * (Ds + Dh) / 4 * Math.tan(delta_used + alpha);
+                    } else {
+                        // 上部叶片乘以折减系数β=0.44
+                        Th_i[i] = beta * (F_prime_vi + W_hi[i]) * (Ds + Dh) / 4 * Math.tan(delta_used + alpha);
+                    }
+                }
+                
+                // 总扭矩
+                const T_total = Ts + Tb + Th_i.reduce((sum, val) => sum + val, 0);
+                
+                // 存储扭矩
+                depth_evolution.T_total[step] = T_total;
+                
+                // 计算当前深度下的总功率
+                const P_total = T_total * (2 * Math.PI * n_rad_per_s) + Fv * v;
+                depth_evolution.P_total[step] = P_total / 1000; // 转换为kW
+            }
+            
+            return depth_evolution;
+        }
+        
+        // 计算并显示结果
+        function calculateAndDisplayResults() {
+            const data = calculationData;
+            
+            // 获取每个深度的土层参数
+            const soilParams = getSoilParamsAtDepth(data.layerData, data.H_total, data.step_size);
+            const { gamma_array, Dr_array, phi_p_deg_array, phi_cv_deg_array, depths } = soilParams;
+            
+            // 初始化结果对象
+            const results = {
+                ghaly: null,
+                al: null,
+                shao: null
+            };
+            
+            // 调用选中的模型进行计算
+            if (data.useGhaly) {
+                results.ghaly = GhalyModel(data.Dh_array, data.Ds, data.n, data.H_total, gamma_array, 
+                                          phi_p_deg_array, data.th, data.step_size, data.Sh_array, 
+                                          data.Hh_bot, data.Ph_array, data.layerData);
+            }
+            
+            if (data.useAl) {
+                results.al = AlBaghdadiModel(data.Dh_array, data.Ds, data.n, data.H_total, gamma_array, 
+                                            phi_p_deg_array, data.th, Dr_array, data.step_size, 
+                                            data.Sh_array, data.Hh_bot, data.layerData);
+            }
+            
+            if (data.useShao) {
+                results.shao = ShaoLiuModel(data.Dh_array, data.Ds, data.n, data.H_total, gamma_array, 
+                                           phi_p_deg_array, phi_cv_deg_array, data.th, data.n_rpm, 
+                                           data.step_size, data.Sh_array, data.Hh_bot, data.Ph_array, 
+                                           data.layerData);
+            }
+            
+            // 更新结果显示
+            updateResults(results);
+            
+            // 绘制图表
+            drawCharts(results, depths);
+        }
+        
+        // 更新结果显示
+        function updateResults(results) {
+            const container = document.getElementById('model-results-container');
+            container.innerHTML = '';
+            
+            // Ghaly模型结果
+            if (results.ghaly) {
+                const ghalyTorque = results.ghaly.T_evolution[results.ghaly.T_evolution.length - 1];
+                const ghalyForce = results.ghaly.Fv_evolution[results.ghaly.Fv_evolution.length - 1];
+                
+                const ghalyCard = document.createElement('div');
+                ghalyCard.className = 'model-card ghaly';
+                ghalyCard.innerHTML = `
+                    <h3>Ghaly & Hanna 模型</h3>
+                    <div class="result-value">${ghalyTorque.toFixed(2)}</div>
+                    <div class="value-label">最终扭矩 (kN·m)</div>
+                    <div class="result-value">${ghalyForce.toFixed(2)}</div>
+                    <div class="value-label">最终垂直力 (kN)</div>
+                `;
+                container.appendChild(ghalyCard);
+            }
+            
+            // Al-Baghdadi模型结果
+            if (results.al) {
+                const alTorque = results.al.T_evolution[results.al.T_evolution.length - 1];
+                const alForce = results.al.Fv_evolution[results.al.Fv_evolution.length - 1];
+                
+                const alCard = document.createElement('div');
+                alCard.className = 'model-card al-baghdadi';
+                alCard.innerHTML = `
+                    <h3>Al-Baghdadi 模型</h3>
+                    <div class="result-value">${alTorque.toFixed(2)}</div>
+                    <div class="value-label">最终扭矩 (kN·m)</div>
+                    <div class="result-value">${alForce.toFixed(2)}</div>
+                    <div class="value-label">最终垂直力 (kN)</div>
+                `;
+                container.appendChild(alCard);
+            }
+            
+            // Shao-Liu模型结果
+            if (results.shao) {
+                const shaoTorque = results.shao.T_total[results.shao.T_total.length - 1];
+                const shaoForce = results.shao.Fv_total[results.shao.Fv_total.length - 1];
+                
+                const shaoCard = document.createElement('div');
+                shaoCard.className = 'model-card shao';
+                shaoCard.innerHTML = `
+                    <h3>Shao-Liu 模型</h3>
+                    <div class="result-value">${shaoTorque.toFixed(2)}</div>
+                    <div class="value-label">最终扭矩 (kN·m)</div>
+                    <div class="result-value">${shaoForce.toFixed(2)}</div>
+                    <div class="value-label">最终垂直力 (kN)</div>
+                `;
+                container.appendChild(shaoCard);
+            }
+        }
+        
+        // 绘制图表
+        function drawCharts(results, depths) {
+            const torqueCtx = document.getElementById('torqueChart').getContext('2d');
+            const forceCtx = document.getElementById('forceChart').getContext('2d');
+            
+            // 如果图表已存在，先销毁
+            if (torqueChart) {
+                torqueChart.destroy();
+            }
+            if (forceChart) {
+                forceChart.destroy();
+            }
+            
+            // 准备数据集
+            const torqueDatasets = [];
+            const forceDatasets = [];
+            
+            // Ghaly模型数据
+            if (results.ghaly) {
+                torqueDatasets.push({
+                    label: 'Ghaly & Hanna',
+                    data: results.ghaly.T_evolution.map((value, index) => ({x: value, y: depths[index]})),
+                    borderColor: '#1a2980',
+                    backgroundColor: 'rgba(26, 41, 128, 0.1)',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.1
+                });
+                
+                forceDatasets.push({
+                    label: 'Ghaly & Hanna',
+                    data: results.ghaly.Fv_evolution.map((value, index) => ({x: value, y: depths[index]})),
+                    borderColor: '#1a2980',
+                    backgroundColor: 'rgba(26, 41, 128, 0.1)',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.1
+                });
+            }
+            
+            // Al-Baghdadi模型数据
+            if (results.al) {
+                torqueDatasets.push({
+                    label: 'Al-Baghdadi',
+                    data: results.al.T_evolution.map((value, index) => ({x: value, y: depths[index]})),
+                    borderColor: '#e74c3c',
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: false,
+                    tension: 0.1
+                });
+                
+                forceDatasets.push({
+                    label: 'Al-Baghdadi',
+                    data: results.al.Fv_evolution.map((value, index) => ({x: value, y: depths[index]})),
+                    borderColor: '#e74c3c',
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: false,
+                    tension: 0.1
+                });
+            }
+            
+            // Shao-Liu模型数据
+            if (results.shao) {
+                torqueDatasets.push({
+                    label: 'Shao-Liu',
+                    data: results.shao.T_total.map((value, index) => ({x: value, y: depths[index]})),
+                    borderColor: '#27ae60',
+                    backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                    borderWidth: 2,
+                    borderDash: [2, 2],
+                    fill: false,
+                    tension: 0.1
+                });
+                
+                forceDatasets.push({
+                    label: 'Shao-Liu',
+                    data: results.shao.Fv_total.map((value, index) => ({x: value, y: depths[index]})),
+                    borderColor: '#27ae60',
+                    backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                    borderWidth: 2,
+                    borderDash: [2, 2],
+                    fill: false,
+                    tension: 0.1
+                });
+            }
+            
+            // 创建扭矩-深度图表
+            torqueChart = new Chart(torqueCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: torqueDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '扭矩-深度曲线',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.x.toFixed(2)} kN·m`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '扭矩 (kN·m)',
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            grid: {
+                                display: true
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '深度 (m)',
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            reverse: true,
+                            min: 0,
+                            max: calculationData.H_total,
+                            grid: {
+                                display: true
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 创建垂直力-深度图表
+            forceChart = new Chart(forceCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: forceDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '垂直力-深度曲线',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.x.toFixed(2)} kN`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '垂直力 (kN)',
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            grid: {
+                                display: true
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '深度 (m)',
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            reverse: true,
+                            min: 0,
+                            max: calculationData.H_total,
+                            grid: {
+                                display: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 导出结果
+        function exportResults() {
+            if (!calculationData) return;
+            
+            // 创建一个包含结果数据的对象
+            const exportData = {
+                parameters: calculationData,
+                timestamp: new Date().toISOString()
+            };
+            
+            // 将数据转换为JSON字符串
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            // 创建下载链接
+            const exportFileDefaultName = `helical_pile_analysis_${new Date().toISOString().slice(0,10)}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            alert('结果已导出为JSON文件！');
+        }
+    </script>
+</body>
+</html>
