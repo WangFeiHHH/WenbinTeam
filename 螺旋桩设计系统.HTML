@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>螺旋桩设计系统 - 整合版</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft YaHei', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            color: white;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .main-container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+            margin-bottom: 20px;
+        }
+        
+        header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        header p {
+            font-size: 18px;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .tab-container {
+            display: flex;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 12px 12px 0 0;
+            backdrop-filter: blur(10px);
+            margin-bottom: 0;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 20px 30px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 18px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+        
+        .tab.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-bottom: 3px solid #fff;
+        }
+        
+        .iframe-container {
+            background-color: white;
+            border-radius: 0 0 12px 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            height: calc(100vh - 200px);
+            min-height: 700px;
+        }
+        
+        .iframe-content {
+            display: none;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .iframe-content.active {
+            display: block;
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            background-color: #f5f7fa;
+            color: #666;
+            font-size: 18px;
+        }
+        
+        .loading i {
+            margin-right: 10px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .instructions {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .feature {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .feature:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature i {
+            font-size: 40px;
+            margin-bottom: 15px;
+            color: #26d0ce;
+        }
+        
+        .feature h4 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .tab {
+                padding: 15px 20px;
+                font-size: 16px;
+            }
+            
+            header h1 {
+                font-size: 28px;
+            }
+            
+            header p {
+                font-size: 16px;
+            }
+            
+            .iframe-container {
+                height: calc(100vh - 180px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <header>
+            <h1><i class="fas fa-calculator"></i> 螺旋桩设计系统</h1>
+            <p>综合计算平台</p>
+        </header>
+        
+        <div class="instructions">
+            <h3><i class="fas fa-info-circle"></i> 系统说明</h3>
+            <p>本系统开发于湖南大学能源岩土课题组。系统的所有计算结果仅提供参考，系统开发者不对结果承担任何责任，用户在进行螺旋桩设计时需结合实际工程谨慎考虑！</p>
+        </div>
+        
+        <div class="feature-list">
+            <div class="feature">
+                <i class="fas fa-chart-line"></i>
+                <h4>极限承载力计算</h4>
+                <p>集成五种规范计算方法，专业可靠</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-tools"></i>
+                <h4>安装力分析</h4>
+                <p>精确分析螺旋桩安装过程中的受力情况</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-shield-alt"></i>
+                <h4>强度验算</h4>
+                <p>全面验证螺旋桩的结构安全性</p>
+            </div>
+        </div>
+        
+        <div class="tab-container">
+            <button class="tab active" onclick="switchTab('capacity')">
+                <i class="fas fa-chart-line"></i> 极限承载力
+            </button>
+            <button class="tab" onclick="switchTab('installation')">
+                <i class="fas fa-tools"></i> 安装力分析
+            </button>
+            <button class="tab" onclick="switchTab('strength')">
+                <i class="fas fa-shield-alt"></i> 强度验算
+            </button>
+        </div>
+        
+        <div class="iframe-container">
+            <!-- 极限承载力页面 -->
+            <iframe id="capacity" class="iframe-content active" 
+                    src="极限承载力.HTML" 
+                    onload="hideLoading(this)">
+                <div class="loading">
+                    <i class="fas fa-spinner"></i>正在加载极限承载力计算器...
+                </div>
+            </iframe>
+            
+            <!-- 安装力分析页面 -->
+            <iframe id="installation" class="iframe-content" 
+                    src="安装力.HTML" 
+                    onload="hideLoading(this)">
+                <div class="loading">
+                    <i class="fas fa-spinner"></i>正在加载安装力分析工具...
+                </div>
+            </iframe>
+            
+            <!-- 强度验算页面 -->
+            <iframe id="strength" class="iframe-content" 
+                    src="强度验算.HTML" 
+                    onload="hideLoading(this)">
+                <div class="loading">
+                    <i class="fas fa-spinner"></i>正在加载强度验算系统...
+                </div>
+            </iframe>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // 隐藏所有iframe
+            const iframes = document.querySelectorAll('.iframe-content');
+            iframes.forEach(iframe => {
+                iframe.classList.remove('active');
+            });
+            
+            // 移除所有标签的激活状态
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 显示选中的iframe
+            document.getElementById(tabName).classList.add('active');
+            
+            // 激活对应的标签
+            event.target.classList.add('active');
+        }
+        
+        function hideLoading(iframe) {
+            // 页面加载完成后隐藏加载提示
+            const loadingDiv = iframe.contentDocument?.querySelector('.loading');
+            if (loadingDiv) {
+                loadingDiv.style.display = 'none';
+            }
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('螺旋桩设计系统已加载');
+            
+            // 预加载其他页面（可选）
+            setTimeout(() => {
+                document.getElementById('installation').src = '安装力.HTML';
+                document.getElementById('strength').src = '强度验算.HTML';
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
